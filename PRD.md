@@ -14,8 +14,8 @@ mengingatkan pendonor yang sudah boleh donor lagi.
 
 ## Stack
 
-- Backend: Python + Flask, SQLite (stdlib `sqlite3`)
-- Frontend: HTML + vanilla JS + CSS murni
+- Backend: Next.js 14 (App Router, API routes) + TypeScript, Prisma 5 + SQLite
+- Frontend: React + Tailwind, App Router pages
 
 ## Model Data
 

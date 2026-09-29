@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Pendonor {
+  id             Int      @id @default(autoincrement())
+  nama           String
+  golongan       String
+  rhesus         String   @default("+")
+  telepon        String?
+  donor_terakhir String?
+  donasi         Donasi[]
+
+  @@map("pendonor")
+}
+
+model Stok {
+  id              Int    @id @default(autoincrement())
+  golongan        String
+  rhesus          String
+  komponen        String
+  jumlah          Int
+  tgl_masuk       String
+  tgl_kedaluwarsa String
+
+  @@map("stok")
+  @@index([golongan, rhesus, komponen, tgl_kedaluwarsa])
+}
+
+model Donasi {
+  id          Int      @id @default(autoincrement())
+  pendonor_id Int
+  tanggal     String
+  golongan    String
+  rhesus      String
+  komponen    String
+  jumlah      Int
+  pendonor    Pendonor @relation(fields: [pendonor_id], references: [id])
+
+  @@map("donasi")
+  @@index([pendonor_id])
+}
+
+model Permintaan {
+  id          Int     @id @default(autoincrement())
+  rumah_sakit String
+  golongan    String
+  rhesus      String
+  komponen    String
+  jumlah      Int
+  tanggal     String
+  status      String  @default("menunggu")
+  catatan     String?
+
+  @@map("permintaan")
+}
+
+model Kegiatan {
+  id             Int    @id @default(autoincrement())
+  nama           String
+  tanggal        String
+  lokasi         String
+  target_peserta Int    @default(0)
+
+  @@map("kegiatan")
+}
