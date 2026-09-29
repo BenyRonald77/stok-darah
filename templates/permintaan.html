@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Permintaan Darah RS</h2>
+<table id="tbl"><thead><tr><th>RS</th><th>Kebutuhan</th><th>Jumlah</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr></thead><tbody></tbody></table>
+<h3>Permintaan Baru</h3>
+<form id="f">
+  <input name="rumah_sakit" placeholder="Rumah sakit" required>
+  <select name="golongan" id="gol"></select>
+  <select name="rhesus"><option>+</option><option>-</option></select>
+  <select name="komponen" id="komp"></select>
+  <input name="jumlah" type="number" min="1" placeholder="Jumlah kantong" required>
+  <input name="catatan" placeholder="Catatan">
+  <button>Buat Permintaan</button>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+el("gol").innerHTML = GOLONGAN.map(g => `<option>${g}</option>`).join("");
+el("komp").innerHTML = KOMPONEN.map(k => `<option>${k}</option>`).join("");
+async function load() {
+  const m = await api("/api/permintaan");
+  el("tbl").querySelector("tbody").innerHTML = m.map(x =>
+    `<tr><td>${x.rumah_sakit}</td><td>${x.golongan}${x.rhesus} ${x.komponen}</td>
+     <td>${x.jumlah}</td><td>${x.tanggal}</td>
+     <td><span class="badge">${x.status}</span></td>
+     <td>${x.status === "menunggu" ? `
+       <button onclick="penuhi(${x.id})">Penuhi</button>
+       <input id="c${x.id}" placeholder="alasan tolak" style="width:120px">
+       <button onclick="tolak(${x.id})" class="danger">Tolak</button>` : (x.catatan || "-")}</td></tr>`).join("");
+}
+el("f").onsubmit = async e => {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  d.jumlah = +d.jumlah;
+  const r = await post("/api/permintaan", d);
+  if (!r.error) { e.target.reset(); load(); }
+};
+async function penuhi(id) {
+  const r = await fetch(`/api/permintaan/${id}/penuhi`, {method: "POST"});
+  const d = await r.json();
+  if (!r.ok) return alert(d.error);
+  alert(`Dipenuhi ${d.dipenuhi} kantong (FIFO kedaluwarsa terdekat)`);
+  load();
+}
+async function tolak(id) {
+  const catatan = el("c" + id).value;
+  const r = await fetch(`/api/permintaan/${id}/tolak`, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({catatan})});
+  if (!r.ok) return alert((await r.json()).error);
+  load();
+}
+load();
+</script>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Dashboard</h2>
+<div id="ringkasan" class="cards"></div>
+<h3>Stok per Golongan & Komponen</h3>
+<table id="tbl"><thead><tr><th>Golongan</th><th>Komponen</th><th>Tersedia</th><th>Kedaluwarsa</th></tr></thead><tbody></tbody></table>
+<h3>Hampir Kedaluwarsa (≤ 7 hari)</h3>
+<table id="hampir"><thead><tr><th>Golongan</th><th>Komponen</th><th>Jumlah</th><th>Kedaluwarsa</th></tr></thead><tbody></tbody></table>
+{% endblock %}
+{% block scripts %}
+<script>
+(async () => {
+  const d = await api("/api/dashboard");
+  el("ringkasan").innerHTML = `
+    <div class="card"><h4>Permintaan menunggu</h4><p><b>${d.permintaan_menunggu}</b></p></div>
+    <div class="card"><h4>Pendonor boleh donor</h4><p><b>${d.pendonor_boleh_donor}</b></p></div>`;
+  el("tbl").querySelector("tbody").innerHTML = d.stok_per_jenis.map(x =>
+    `<tr><td>${x.golongan}${x.rhesus}</td><td>${x.komponen}</td>
+     <td><b>${x.tersedia}</b></td><td class="${x.kedaluwarsa ? 'warn' : ''}">${x.kedaluwarsa}</td></tr>`).join("");
+  el("hampir").querySelector("tbody").innerHTML = d.hampir_kedaluwarsa.map(x =>
+    `<tr><td>${x.golongan}${x.rhesus}</td><td>${x.komponen}</td><td>${x.jumlah}</td><td class="warn">${x.tgl_kedaluwarsa}</td></tr>`).join("")
+    || '<tr><td colspan="4">Tidak ada.</td></tr>';
+})();
+</script>
+{% endblock %}
